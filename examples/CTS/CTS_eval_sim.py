@@ -12,15 +12,15 @@ from common import metrics
 
 if __name__ == '__main__':
 
-    plot_input = True
+    plot_input = False
 
     dataset_type = 'val'
 
-    #model_name = 'model_custom_SS_128step'
-    #hidden_name = 'hidden_custom_SS_128step'
+    model_name = 'model_custom_SS_tmp_128step'
+    hidden_name = 'hidden_custom_SS_tmp_128step'
 
-    model_name = 'model_SS_custom_hidden_integration'
-    hidden_name = 'hidden_SS_custom_hidden_integration'
+    #model_name = 'model_SS_custom_hidden_integration'
+    #hidden_name = 'hidden_SS_custom_hidden_integration'
 
     # Load dataset
     df_data = pd.read_csv(os.path.join("data", "dataBenchmark.csv"))

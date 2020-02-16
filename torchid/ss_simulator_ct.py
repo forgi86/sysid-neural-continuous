@@ -124,3 +124,62 @@ class ExplicitRKSimulator(nn.Module):
         X_sim = torch.stack(X_sim_list, 0)
 
         return X_sim
+
+
+class RK4Simulator(nn.Module):
+    """ This class implements prediction/simulation methods for a continuous SS model structure
+
+     Attributes
+     ----------
+     ss_model: nn.Module
+               The neural SS model to be fitted
+     ts: float
+         model sampling time (when it is fixed)
+
+     scheme: string
+          Runge-Kutta scheme to be used
+    """
+
+    def __init__(self, ss_model, ts=1.0, scheme='RK44', device="cpu"):
+        super(RK4Simulator, self).__init__()
+        self.ss_model = ss_model
+        self.ts = ts
+        self.device = device
+
+    def forward(self, x0_batch, u_batch):
+        """ Multi-step simulation over (mini)batches
+
+        Parameters
+        ----------
+        x0_batch: Tensor. Size: (q, n_x)
+             Initial state for each subsequence in the minibatch
+
+        u_batch: Tensor. Size: (m, q, n_u)
+            Input sequence for each subsequence in the minibatch
+
+        Returns
+        -------
+        Tensor. Size: (m, q, n_x)
+            Simulated state for all subsequences in the minibatch
+
+        """
+
+        X_sim_list = []
+        x_step = x0_batch
+        for u_step in u_batch.split(1):#i in range(seq_len):
+
+            u_step = u_step.squeeze(0)
+            X_sim_list += [x_step]
+            #u_step = u_batch[i, :, :]
+
+            dt2 = self.ts / 2.0
+            k1 = self.ss_model(x_step, u_step)
+            k2 = self.ss_model(x_step + dt2 * k1, u_step)
+            k3 = self.ss_model(x_step + dt2 * k2, u_step)
+            k4 = self.ss_model(x_step + self.ts * k3, u_step)
+            dx = self.ts / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4)
+            x_step = x_step + dx
+
+        X_sim = torch.stack(X_sim_list, 0)
+
+        return X_sim

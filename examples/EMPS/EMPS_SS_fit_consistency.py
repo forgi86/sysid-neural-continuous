@@ -10,25 +10,34 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import MechanicalStateSpaceSystem
-from torchid.ss_simulator_ct import RK4Simulator, ExplicitRKSimulator, ForwardEulerSimulator
+from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
 from torch.utils.tensorboard import SummaryWriter  # requires tensorboard
+
+def scale_pos(q_unsc):
+    q_sc = (q_unsc - 0.125)/0.125
+    return q_sc
+
+
+def unscale_pos(q_sc):
+    q_unsc = q_sc*0.125 + 0.125
+    return q_unsc
+
 
 if __name__ == '__main__':
 
-    # In[Set seed for reproducibility]
+    # Set seed for reproducibility
     np.random.seed(0)
     torch.manual_seed(0)
 
-    # In[Overall parameters]
-    num_iter = 10000  # gradient-based optimization steps
-    seq_len = 64  # subsequence length m
+    # Overall parameters
+    num_iter = 40000  # gradient-based optimization steps
     batch_size = 32 # batch size
     t_fit = 2e-3  # fitting on t_fit ms of data
-    alpha = 1  # regularization weight
-    lr = 1e-4  # learning rate
+    alpha = 1e3  # fit/consistency trade-off constant
+    lr = 1e-5  # learning rate
     test_freq = 100  # print message every test_freq iterations
 
-    # In[Load dataset]
+    # Load dataset
     df_data = pd.read_csv(os.path.join("data", "DATA_EMPS_SC.csv"))
     time_exp = np.array(df_data[["time_exp"]]).astype(np.float32)
     q_ref = np.array(df_data[["q_ref"]]).astype(np.float32)
@@ -37,22 +46,26 @@ if __name__ == '__main__':
     u_in = np.array(df_data[["u_in"]]).astype(np.float32)
     ts = np.mean(np.diff(time_exp.ravel())) #time_exp[1] - time_exp[0]
 
-    # In[Init hidden state]
     x_est = np.zeros((q_ref.shape[0], 2), dtype=np.float32)
     x_est[:, 0] = np.copy(q_meas[:, 0])
     x_est[:, 1] = np.copy(v_est[:, 0])
+
+    # Hidden velocity variable
     x_hidden_fit = torch.tensor(x_est, dtype=torch.float32, requires_grad=True)  # hidden state is an optimization variable
 
-    # In[Fit variables]
     y_fit = q_meas
     u_fit = u_in
     time_fit = time_exp
 
-    # In[Setup neural model structure]
-    ss_model = MechanicalStateSpaceSystem(n_feat=64, init_small=True, typical_ts=ts)
-    nn_solution = RK4Simulator(ss_model, ts=ts)
+    # y and u to torch
+    y_torch_fit = torch.tensor(y_fit)
+    u_torch_fit = torch.tensor(u_fit)
 
-    # In[Setup optimizer]
+    # Setup neural model structure
+    ss_model = MechanicalStateSpaceSystem(n_feat=64, init_small=True, typical_ts=ts)
+    nn_solution = ForwardEulerSimulator(ss_model, ts=ts)
+
+    # Setup optimizer
     params_net = list(nn_solution.ss_model.parameters())
     params_hidden = [x_hidden_fit]
     optimizer = optim.Adam([
@@ -60,57 +73,26 @@ if __name__ == '__main__':
         {'params': params_hidden, 'lr': lr},
     ], lr=lr*10)
 
-
-    # In[Batch extraction funtion]
-    def get_batch(batch_size, seq_len):
-
-        # Select batch indexes
-        num_train_samples = u_fit.shape[0]
-        batch_start = np.random.choice(np.arange(num_train_samples - seq_len, dtype=np.int64), batch_size, replace=False) # batch start indices
-        batch_idx = batch_start[:, np.newaxis] + np.arange(seq_len) # batch samples indices
-        batch_idx = batch_idx.T  # transpose indexes to obtain batches with structure (m, q, n_x)
-
-        # Extract batch data
-        batch_t = torch.tensor(time_fit[batch_idx])
-        batch_x0_hidden = x_hidden_fit[batch_start, :]
-        batch_x_hidden = x_hidden_fit[[batch_idx]]
-        batch_u = torch.tensor(u_fit[batch_idx])
-        batch_y = torch.tensor(y_fit[batch_idx])
-
-        return batch_t, batch_x0_hidden, batch_u, batch_y, batch_x_hidden
-
-    # In[Scale loss with respect to the initial one]
-    with torch.no_grad():
-        batch_t, batch_x0_hidden, batch_u, batch_x, batch_x_hidden = get_batch(batch_size, seq_len)
-        batch_x_sim = nn_solution(batch_x0_hidden, batch_u)
-        traced_nn_solution = torch.jit.trace(nn_solution, (batch_x0_hidden, batch_u))
-        err_init = batch_x_sim - batch_x
-        scale_error = torch.sqrt(torch.mean(err_init**2, dim=(0, 1)))
-
-    # In[Training loop]
     LOSS = []
     writer = SummaryWriter("logs")
     start_time = time.time()
     # Training loop
+
+    #scripted_nn_solution = torch.jit.script(nn_solution)
     for itr in range(0, num_iter):
 
         optimizer.zero_grad()
 
-        # Simulate
-        batch_t, batch_x0_hidden, batch_u, batch_y, batch_x_hidden = get_batch(batch_size, seq_len)
-        batch_x_sim = traced_nn_solution(batch_x0_hidden, batch_u) # 52 seconds RK | 13 FE
-        #batch_x_sim = nn_solution(batch_x0_hidden, batch_u) # 70 seconds RK | 13 FE
-        #batch_x_sim = scripted_nn_solution(batch_x0_hidden, batch_u) # 71 seconds RK | 13 FE
-
         # Compute fit loss
-        err_fit = batch_x_sim[:, :, [0]] - batch_y
-        err_fit_scaled = err_fit/scale_error[0]
-        loss_fit = torch.mean(err_fit_scaled**2)
+        err_fit = x_hidden_fit[:, [0]] - y_torch_fit
+        loss_fit = 1000*torch.mean(err_fit**2)
 
         # Compute consistency loss
-        err_consistency = batch_x_sim - batch_x_hidden
-        err_consistency_scaled = err_consistency/scale_error
-        loss_consistency = torch.mean(err_consistency_scaled**2)
+
+        DX = ts/2 * ( ss_model(x_hidden_fit[1:, :], u_torch_fit[1:, :]) + ss_model(x_hidden_fit[0:-1, :],  u_torch_fit[0:-1, :]) )
+        err_consistency = x_hidden_fit[1:, :] - x_hidden_fit[0:-1, :] - DX
+        err_consistency_scaled = err_consistency
+        loss_consistency = 1000*torch.mean(err_consistency_scaled**2)
 
         # Compute trade-off loss
         loss = loss_fit + alpha*loss_consistency
@@ -122,28 +104,32 @@ if __name__ == '__main__':
         writer.add_scalar("loss_fit", loss_fit, itr)
         if itr % test_freq == 0:
             with torch.no_grad():
-                print(f'Iter {itr} | Tradeoff Loss {loss:.4f}   Consistency Loss {loss_consistency:.4f}   Fit Loss {loss_fit:.4f}')
+                print(f'Iter {itr} | Tradeoff Loss {loss:.4f}   Consistency Loss {alpha*loss_consistency:.7f}   Fit Loss {loss_fit:.7f}')
 
         # Optimize
         loss.backward()
         optimizer.step()
 
     train_time = time.time() - start_time
-    print(f"\nTrain time: {train_time:.2f}") # 731 seconds
+    print(f"\nTrain time: {train_time:.2f}") # 182 seconds
 
     if not os.path.exists("models"):
         os.makedirs("models")
 
-    # In[Save model]
+    # Save model
     if not os.path.exists("models"):
         os.makedirs("models")
 
-    model_filename = f"model_SS_{seq_len}step_RK.pkl"
+    model_filename = f"model_SS_consistency.pkl"
+
     torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
 
-    # In[Plot loss]
+
+    # Plot figures
     if not os.path.exists("fig"):
         os.makedirs("fig")
+
+    # In[Plot loss]
 
     fig, ax = plt.subplots(1, 1)
     ax.plot(LOSS)
@@ -151,7 +137,7 @@ if __name__ == '__main__':
     ax.set_ylabel("Loss (-)")
     ax.set_xlabel("Iteration (-)")
 
-    fig_name = f"EMPS_SS_loss_{seq_len}step.pdf"
+    fig_name = f"EMPS_SS_loss_consistency.pdf"
     fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
 
     # In[Plot hidden]
@@ -184,9 +170,6 @@ if __name__ == '__main__':
         q_sim = x_sim_val[:, 0]
         v_sim = x_sim_val[:, 1]
 
-
-    # In[Plot simulation]
-
     fig, ax = plt.subplots(3, 1, sharex=True, figsize=(6, 7.5))
     #ax[0].plot(time_exp, q_ref,  'k',  label='$q_{\mathrm{ref}}$')
     ax[0].plot(time_exp, q_meas, 'k', label='$q_{\mathrm{meas}}$')
@@ -205,3 +188,5 @@ if __name__ == '__main__':
     ax[2].set_ylabel("Voltage (V)")
     ax[2].grid(True)
     ax[2].set_xlabel("Time (s)")
+
+

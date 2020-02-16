@@ -18,11 +18,11 @@ if __name__ == '__main__':
     dataset_type = 'id'
     #model_type = '1step_nonoise'
     #model_type = '1step_noise'
-    #model_type = '64step_noise'
+    model_type = '64step_noise'
     #model_type = 'simerr_noise'
 
     #model_type = 'legendre_regular_multistep_5step_nonoise'
-    model_type = 'hiddencons_noise'
+    #model_type = 'hiddencons_noise'
 
     # Column names in the dataset
     COL_T = ['time']

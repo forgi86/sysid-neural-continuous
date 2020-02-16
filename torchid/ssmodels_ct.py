@@ -111,6 +111,39 @@ class MechanicalStateSpaceSystem(nn.Module):
         return dx
 
 
+class MechanicalStateSpaceSystemV2(nn.Module):
+    n_x: Final[int]
+    n_u: Final[int]
+    n_feat: Final[int]
+
+    def __init__(self, n_feat=64, init_small=True, typical_ts=1.0):
+        super(MechanicalStateSpaceSystemV2, self).__init__()
+        self.n_feat = n_feat
+        self.typical_ts = typical_ts
+
+        self.net = nn.Sequential(
+            nn.Linear(2, n_feat),  # 2 states, 1 input
+            nn.ReLU(),
+            nn.Linear(n_feat, 1)
+        )
+
+        # Small initialization is better for multi-step methods
+        if init_small:
+            for m in self.net.modules():
+                if isinstance(m, nn.Linear):
+                    nn.init.normal_(m.weight, mean=0, std=1e-3)
+                    nn.init.constant_(m.bias, val=0)
+
+    def forward(self, in_x, in_u):
+        list_dx: List[torch.Tensor]
+        in_xu = torch.cat((in_x[..., [1]], in_u), -1)  # concatenate x and u over the last dimension to create the [xu] input
+        dx_v = self.net(in_xu)/self.typical_ts  # \dot x = f([xu])
+
+        list_dx = [in_x[..., [1]], dx_v]
+        dx = torch.cat(list_dx, -1)  # dot x = v, dot v = net
+        return dx
+
+
 class StateSpaceModelLin(nn.Module):
     def __init__(self, A, B):
         super(StateSpaceModelLin, self).__init__()

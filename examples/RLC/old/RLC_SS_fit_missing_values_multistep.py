@@ -9,7 +9,7 @@ import time
 import matplotlib.pyplot as plt
 import sys
 import scipy as sp
-sys.path.append(os.path.join("..", ".."))
+sys.path.append(os.path.join("../..", ".."))
 from torchid.ssmodels_ct import NeuralStateSpaceModel
 from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
 
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     COL_Y = ['V_C']
 
     # Load dataset
-    df_X = pd.read_csv(os.path.join("data", "RLC_data_id.csv"))
+    df_X = pd.read_csv(os.path.join("../data", "RLC_data_id.csv"))
     t = np.array(df_X[COL_T], dtype=np.float32)
     x = np.array(df_X[COL_X], dtype=np.float32)
     u = np.array(df_X[COL_U], dtype=np.float32)
@@ -169,8 +169,8 @@ if __name__ == '__main__':
     print(f"\nTrain time: {train_time:.2f}") # 182 seconds
 
     # In[Save model]
-    if not os.path.exists("models"):
-        os.makedirs("models")
+    if not os.path.exists("../models"):
+        os.makedirs("../models")
     if add_noise:
         model_filename = f"model_SS_{seq_len}step_noise.pkl"
         hidden_filename = f"hidden_SS_{seq_len}step_noise.pkl"
@@ -178,8 +178,8 @@ if __name__ == '__main__':
         model_filename = f"model_SS_{seq_len}step_nonoise.pkl"
         hidden_filename = f"hidden_SS_{seq_len}step_nonoise.pkl"
 
-    torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
-    torch.save(x_hidden_fit, os.path.join("models", hidden_filename))
+    torch.save(nn_solution.ss_model.state_dict(), os.path.join("../models", model_filename))
+    torch.save(x_hidden_fit, os.path.join("../models", hidden_filename))
 
     # In[Simulate]
 
@@ -199,8 +199,8 @@ if __name__ == '__main__':
         x_sim_torch_val = nn_solution(x0_torch_val[None, :], u_torch_val[:, None, :])
         x_sim_torch_val = x_sim_torch_val.squeeze(1)
 
-    if not os.path.exists("fig"):
-        os.makedirs("fig")
+    if not os.path.exists("../fig"):
+        os.makedirs("../fig")
 
     fig, ax = plt.subplots(3, 1, sharex=True)
     ax[0].plot(np.array(x_true_torch_val[:, 0]), label='True')
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     else:
         fig_name = f"RLC_SS_loss_{seq_len}step_nonoise.pdf"
 
-    fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
+    fig.savefig(os.path.join("../fig", fig_name), bbox_inches='tight')
 
     x_hidden_fit_np = x_hidden_fit.detach().numpy()
     fig, ax = plt.subplots(2, 1, sharex=True)

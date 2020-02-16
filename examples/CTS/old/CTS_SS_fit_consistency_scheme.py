@@ -8,8 +8,8 @@ import torch.optim as optim
 import time
 import matplotlib.pyplot as plt
 import sys
-sys.path.append(os.path.join("..", ".."))
-from torchid.ssmodels_ct import CascadedTanksOverflowDeepNeuralStateSpaceModel
+sys.path.append(os.path.join("../..", ".."))
+from torchid.ssmodels_ct import CascadedTanksOverflowNeuralStateSpaceModel
 from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
 
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     add_noise = True
 
     # Load dataset
-    df_data = pd.read_csv(os.path.join("data", "dataBenchmark.csv"))
+    df_data = pd.read_csv(os.path.join("../data", "dataBenchmark.csv"))
     u_id = np.array(df_data[['uEst']]).astype(np.float32)
     y_id = np.array(df_data[['yEst']]).astype(np.float32)
     ts_meas = df_data['Ts'][0].astype(np.float32)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # Build neural state-space model
     ts_integ = ts_meas  # fictitious sampling time, better for numerical reasons
-    ss_model = CascadedTanksOverflowDeepNeuralStateSpaceModel(n_feat=100)#, activation='tanh')
+    ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=100)#, activation='tanh')
     nn_solution = ForwardEulerSimulator(ss_model, ts=ts_integ)
     #model_filename = f"model_SS_{64}step_noise.pkl"
     #nn_solution.ss_model.load_state_dict(torch.load(os.path.join("models", model_filename)))
@@ -104,9 +104,9 @@ if __name__ == '__main__':
         loss.backward()
         optimizer.step()
 
-    # In[Save model]
-    if not os.path.exists("models"):
-        os.makedirs("models")
+    # Save model
+    if not os.path.exists("../models"):
+        os.makedirs("../models")
 
     train_time = time.time() - start_time
     print(f"\nTrain time: {train_time:.2f}") # 182 seconds
@@ -114,19 +114,17 @@ if __name__ == '__main__':
     model_filename =  f"model_SS_custom_hidden_integration.pkl"
     hidden_filename = f"hidden_SS_custom_hidden_integration.pkl"
 
-    torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
-    torch.save(x_hidden_fit_torch, os.path.join("models", hidden_filename))
-    torch.save(ss_model.state_dict(), os.path.join("models", model_filename))
+    torch.save(nn_solution.ss_model.state_dict(), os.path.join("../models", model_filename))
+    torch.save(x_hidden_fit_torch, os.path.join("../models", hidden_filename))
 
-    # In[Plot loss]
-    if not os.path.exists("fig"):
-        os.makedirs("fig")
+    torch.save(ss_model.state_dict(), os.path.join("../models", model_filename))
+
+    if not os.path.exists("../fig"):
+        os.makedirs("../fig")
 
     # Plot figures
-    if not os.path.exists("fig"):
-        os.makedirs("fig")
-
-    # In[Plot loss]
+    if not os.path.exists("../fig"):
+        os.makedirs("../fig")
 
     fig, ax = plt.subplots(1, 1)
     ax.plot(LOSS, 'k', label='ALL')
@@ -137,10 +135,10 @@ if __name__ == '__main__':
     ax.set_ylabel("Loss (-)")
     ax.set_xlabel("Iteration (-)")
 
-    fig_name = f"CTS_SS_custom_loss_hidden_integration.pdf"
-    fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
+    fig_name = f"CTS_SS_loss_hidden_integration_noise.pdf"
+    fig.savefig(os.path.join("../fig", fig_name), bbox_inches='tight')
 
-    # In[Simulate]
+    # Simulate
     y_val = np.copy(y_id)
     u_val = np.copy(u_id)
 
@@ -156,25 +154,30 @@ if __name__ == '__main__':
         y_sim = x_sim_val[:, 1]
 
     # In[Simulation plot]
-
-    x_hidden_fit_np = x_hidden_fit_torch.detach().numpy()
-
-    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(6, 7.5))
-    # ax[0].plot(time_exp, q_ref,  'k',  label='$q_{\mathrm{ref}}$')
-    ax[0].plot(time_exp, y_id, 'k', label='$y_{\mathrm{meas}}$')
-    ax[0].plot(time_exp, y_sim, 'r', label='$y_{\mathrm{sim}}$')
-    #ax[0].plot(time_exp, x_hidden_fit_np[:, 1], 'b', label='${x_{2}}^m$') # may be excluded from the plot
+    fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 7.5))
+    #ax[0].plot(time_exp, q_ref,  'k',  label='$q_{\mathrm{ref}}$')
+    ax[0].plot(time_exp, y_id, 'k', label='$q_{\mathrm{meas}}$')
+    ax[0].plot(time_exp, y_sim, 'r', label='$q_{\mathrm{sim}}$')
     ax[0].legend(loc='upper right')
     ax[0].grid(True)
     ax[0].set_ylabel("Voltage (V)")
 
-    ax[1].plot(time_exp, x_hidden_fit_np[:, 0], 'b', label='${x_{1}}^m$')
-    ax[1].set_ylabel("$x_1$ (-)")
-    ax[1].grid()
+    ax[1].plot(time_exp, u_id, 'k', label='$u_{in}$')
+    ax[1].set_xlabel("Time (s)")
+    ax[1].set_ylabel("Voltage (V)")
+    ax[1].grid(True)
+    ax[1].set_xlabel("Time (s)")
 
-    ax[2].plot(time_exp, u_id, 'k', label='$u_{in}$')
-    ax[2].set_xlabel("Time (s)")
-    ax[2].set_ylabel("Voltage (V)")
-    ax[2].grid(True)
-    ax[2].set_xlabel("Time (s)")
 
+    # Hidden variable plot
+    x_hidden_fit_np = x_hidden_fit_torch.detach().numpy()
+    fig, ax = plt.subplots(2, 1, sharex=True)
+    ax[0].plot(x_est[:, 1], 'b', label='Measured')
+    ax[0].plot(x_hidden_fit_np[:, 1], 'r', label='Hidden')
+    ax[0].legend()
+    ax[0].grid(True)
+
+    #ax[1].plot(x_est[:, 1], 'k', label='Estimated')
+    ax[1].plot(x_hidden_fit_np[:, 1], 'r', label='Hidden')
+    ax[1].legend()
+    ax[1].grid(True)

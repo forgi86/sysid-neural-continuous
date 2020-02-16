@@ -26,7 +26,7 @@ if __name__ == '__main__':
     num_iter = 100000  # gradient-based optimization steps
     seq_len = 128  # subsequence length m
     batch_size = 64  # batch size
-    alpha = 0.5  # fit/consistency trade-off constant
+    alpha = 1.0  # regularization weight
     lr = 1e-4  # learning rate
     test_freq = 100  # print message every test_freq iterations
     val_freq = 100
@@ -40,17 +40,18 @@ if __name__ == '__main__':
 
     x_est = np.zeros((time_exp.shape[0], 2), dtype=np.float32)
     x_est[:, 1] = np.copy(y_id[:, 0])
-    #x_est[:, 1] = np.copy(v_est[:, 0]) # how to initialize this hidden state?
 
     # Hidden state variable
     x_hidden_fit = torch.tensor(x_est, dtype=torch.float32, requires_grad=True)  # hidden state is an optimization variable
+
+    # Fit variables
     y_fit = y_id
     u_fit = u_id
     time_fit = time_exp
 
     # Setup neural model structure
-    ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=64)
-    nn_solution = ExplicitRKSimulator(ss_model, ts=ts)
+    ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=100)
+    nn_solution = ForwardEulerSimulator(ss_model, ts=ts)
 
     # Setup optimizer
     params_net = list(nn_solution.ss_model.parameters())
@@ -115,20 +116,12 @@ if __name__ == '__main__':
         # Simulate
         batch_t, batch_x0_hidden, batch_u, batch_y, batch_x_hidden = get_batch(batch_size, seq_len)
         batch_x_sim = traced_nn_solution(batch_x0_hidden, batch_u) # 52 seconds RK | 13 FE
-        #batch_x_sim = nn_solution(batch_x0_hidden, batch_u) # 70 seconds RK | 13 FE
-        #batch_x_sim = scripted_nn_solution(batch_x0_hidden, batch_u) # 71 seconds RK | 13 FE
 
         # Compute fit loss
         batch_y_sim = batch_x_sim[:, :, [1]]
         err_fit = batch_y_sim - batch_y
         err_fit_scaled = err_fit/scale_error[0]
         loss_fit_sim = torch.mean(err_fit_scaled**2)
-
-        #batch_y_h = batch_x_hidden[:, :, [1]]
-        #err_fit_hidden = batch_y_h - batch_y
-        #err_fit_hidden_scaled = err_fit_hidden/scale_error[0]
-        #loss_fit_hidden = torch.mean(err_fit_scaled**2)
-        #loss_fit = 0.5*(loss_fit_sim + loss_fit_hidden)
         loss_fit = loss_fit_sim
 
         # Compute consistency loss
@@ -138,24 +131,22 @@ if __name__ == '__main__':
 
         # Compute trade-off loss
         if itr > 20000:
-            loss = alpha*loss_fit + (1.0-alpha)*loss_consistency
+            loss = loss_fit + alpha*loss_consistency
         else:
             loss = loss_fit
+
         # Statistics
-        #writer.add_scalars("train_loss/loss_tot", loss, itr)
-        #writer.add_scalar("train_loss/loss_consistency", loss_consistency, itr)
-        #writer.add_scalar("train_loss/loss_fit", loss_fit, itr)
         writer.add_scalars("opt_losses", {
                            "total_loss": loss,
                            "loss_fit": loss_fit,
-                           "loss_consistency": loss_consistency}, itr)
+                           "loss_consistency": alpha*loss_consistency}, itr)
 
         writer.add_scalars("learning_rates", {
                            "log_lr_net": np.log10(optimizer.param_groups[0]['lr']),
                            "log_lr_hidden": np.log10(optimizer.param_groups[1]['lr'])}, itr )
 
         LOSS.append(loss.item())
-        LOSS_CONSISTENCY.append(loss_consistency.item())
+        LOSS_CONSISTENCY.append(alpha*loss_consistency.item())
         LOSS_FIT.append(loss_fit.item())
 
         if itr % test_freq == 0:
@@ -169,7 +160,7 @@ if __name__ == '__main__':
                 LOSS_SIM.append(loss_sim.item())
                 writer.add_scalar("loss/loss_train_sim", loss_sim, itr)
                 scheduler.step(loss_sim)
-                print(f'Iter {itr} | Tradeoff Loss {loss:.4f}   Consistency Loss {loss_consistency:.4f}   Fit Loss {loss_fit:.4f} Simulation Loss {loss_sim:.4f}')
+                print(f'Iter {itr} | Tradeoff Loss {loss:.4f}   Consistency Loss {alpha*loss_consistency:.4f}   Fit Loss {loss_fit:.4f}   Simulation Loss {loss_sim:.4f}')
 
 
 

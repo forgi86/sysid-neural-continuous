@@ -8,9 +8,9 @@ import torch.optim as optim
 import time
 import matplotlib.pyplot as plt
 import sys
-sys.path.append(os.path.join("..", ".."))
+sys.path.append(os.path.join("../..", ".."))
 from torchid.ssmodels_ct import MechanicalStateSpaceSystem
-from torchid.ss_simulator_ct import RK4Simulator, ExplicitRKSimulator, ForwardEulerSimulator
+from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
 from torch.utils.tensorboard import SummaryWriter  # requires tensorboard
 
 if __name__ == '__main__':
@@ -24,12 +24,12 @@ if __name__ == '__main__':
     seq_len = 64  # subsequence length m
     batch_size = 32 # batch size
     t_fit = 2e-3  # fitting on t_fit ms of data
-    alpha = 1  # regularization weight
+    alpha = 1.0  # regularization weight
     lr = 1e-4  # learning rate
     test_freq = 100  # print message every test_freq iterations
 
     # In[Load dataset]
-    df_data = pd.read_csv(os.path.join("data", "DATA_EMPS_SC.csv"))
+    df_data = pd.read_csv(os.path.join("../data", "DATA_EMPS_SC.csv"))
     time_exp = np.array(df_data[["time_exp"]]).astype(np.float32)
     q_ref = np.array(df_data[["q_ref"]]).astype(np.float32)
     q_meas = np.array(df_data[["q_meas"]]).astype(np.float32)
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # In[Setup neural model structure]
     ss_model = MechanicalStateSpaceSystem(n_feat=64, init_small=True, typical_ts=ts)
-    nn_solution = RK4Simulator(ss_model, ts=ts)
+    nn_solution = ForwardEulerSimulator(ss_model, ts=ts)
 
     # In[Setup optimizer]
     params_net = list(nn_solution.ss_model.parameters())
@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
     # In[Training loop]
     LOSS = []
-    writer = SummaryWriter("logs")
+    writer = SummaryWriter("../logs")
     start_time = time.time()
     # Training loop
     for itr in range(0, num_iter):
@@ -129,21 +129,21 @@ if __name__ == '__main__':
         optimizer.step()
 
     train_time = time.time() - start_time
-    print(f"\nTrain time: {train_time:.2f}") # 731 seconds
+    print(f"\nTrain time: {train_time:.2f}") # 182 seconds
 
-    if not os.path.exists("models"):
-        os.makedirs("models")
+    if not os.path.exists("../models"):
+        os.makedirs("../models")
 
     # In[Save model]
-    if not os.path.exists("models"):
-        os.makedirs("models")
+    if not os.path.exists("../models"):
+        os.makedirs("../models")
 
-    model_filename = f"model_SS_{seq_len}step_RK.pkl"
-    torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
+    model_filename = f"model_SS_{seq_len}step.pkl"
+    torch.save(nn_solution.ss_model.state_dict(), os.path.join("../models", model_filename))
 
     # In[Plot loss]
-    if not os.path.exists("fig"):
-        os.makedirs("fig")
+    if not os.path.exists("../fig"):
+        os.makedirs("../fig")
 
     fig, ax = plt.subplots(1, 1)
     ax.plot(LOSS)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     ax.set_xlabel("Iteration (-)")
 
     fig_name = f"EMPS_SS_loss_{seq_len}step.pdf"
-    fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
+    fig.savefig(os.path.join("../fig", fig_name), bbox_inches='tight')
 
     # In[Plot hidden]
 

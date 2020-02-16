@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import NeuralStateSpaceModel
-from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
+from torchid.ss_simulator_ct import ForwardEulerSimulator
 
 
 if __name__ == '__main__':
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     num_iter = 10000  # gradient-based optimization steps
     seq_len = 64  # subsequence length m
     t_fit = 2e-3  # fitting on t_fit ms of data
-    alpha = 0.5  # fit/consistency trade-off constant
+    alpha = 1.0  # regularization weight
     lr = 1e-3  # learning rate
     test_freq = 100  # print message every test_freq iterations
     add_noise = True
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
     # Setup neural model structure
     ss_model = NeuralStateSpaceModel(n_x=2, n_u=1, n_feat=64)
-    nn_solution = ExplicitRKSimulator(ss_model) #ForwardEulerSimulator(ss_model) #ExplicitRKSimulator(ss_model)
+    nn_solution = ForwardEulerSimulator(ss_model) #ForwardEulerSimulator(ss_model) #ExplicitRKSimulator(ss_model)
 
     # Setup optimizer
     params_net = list(nn_solution.ss_model.parameters())
@@ -135,7 +135,7 @@ if __name__ == '__main__':
         loss_consistency = torch.mean(err_consistency_scaled**2)
 
         # Compute trade-off loss
-        loss = alpha*loss_fit + (1.0-alpha)*loss_consistency
+        loss = loss_fit + alpha*loss_consistency
 
         # Statistics
         LOSS.append(loss.item())
@@ -170,7 +170,6 @@ if __name__ == '__main__':
 
     input_data_val = u[0:n_val]
     state_data_val = x[0:n_val]
-    output_data_val = y[0:n_val]
 
     x0_val = np.zeros(2, dtype=np.float32)
     x0_torch_val = torch.from_numpy(x0_val)

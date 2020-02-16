@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('TKAgg')
 import pandas as pd
 import numpy as np
 import torch
@@ -7,17 +9,21 @@ import sys
 
 sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import MechanicalStateSpaceSystem
-from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
+from torchid.ss_simulator_ct import RK4Simulator, ExplicitRKSimulator, ForwardEulerSimulator
 from EMPS_preprocess import unscale_pos
 from common import metrics
 
 if __name__ == '__main__':
 
-    plot_input = False
+    plot_input = True
 
-    dataset_filename = 'DATA_EMPS_SC.csv' # used for identification
-    #dataset_filename = 'DATA_EMPS_PULSES_SC.csv' # used for test
-    model_filename = 'model_SS_64step.pkl'
+    model_name = 'model_SS_64step_RK'
+
+    dataset = 'id'
+    if dataset == 'id':
+        dataset_filename = 'DATA_EMPS_SC.csv' # used for identification
+    elif dataset == 'val':
+        dataset_filename = 'DATA_EMPS_PULSES_SC.csv' # used for test
 
     # Load dataset
     df_data = pd.read_csv(os.path.join("data", dataset_filename))
@@ -46,7 +52,8 @@ if __name__ == '__main__':
 
     # In[Setup neural model structure]
     ss_model = MechanicalStateSpaceSystem(n_feat=64, init_small=True, typical_ts=ts)
-    nn_solution = ForwardEulerSimulator(ss_model, ts=ts)
+    nn_solution = RK4Simulator(ss_model, ts=ts)
+    model_filename = f"{model_name}.pkl"
     nn_solution.ss_model.load_state_dict(torch.load(os.path.join("models", model_filename)))
 
     # In[Evaluate the model in open-loop simulation against validation data]
@@ -57,32 +64,70 @@ if __name__ == '__main__':
     x_sim = np.array(x_sim_torch)
 
     # In[Plot results]
-    fig, ax = plt.subplots(3, 1, sharex=True, figsize=(6, 6.5))
-    idx_plot_start = 0
+
+    # if plot_input:
+    #     fig, ax = plt.subplots(3, 1, sharex=True, figsize=(6, 6.5))
+    # else:
+    #     fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 4.5))
+    #
+    # idx_plot_start = 0
+    # idx_plot_end = time_val.size
+    #
+    # ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(q_meas_val[idx_plot_start:idx_plot_end,0]), 'k',  label='$v_C$')
+    # ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
+    # ax[0].legend(loc='upper right')
+    # ax[0].set_xlabel("Time (s)")
+    # ax[0].set_ylabel("Position (m)")
+    # ax[0].set_ylim([0, 0.3])
+    # ax[0].grid(True)
+    #
+    # ax[1].plot(time_val[idx_plot_start:idx_plot_end], v_est_val[idx_plot_start:idx_plot_end,0], 'k',  label='$v_C$')
+    # ax[1].plot(time_val[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end, 1],'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
+    # ax[1].legend(loc='upper right')
+    # ax[1].set_xlabel("Time (s)")
+    # ax[1].set_ylabel("Speed (m/s)")
+    # ax[1].set_ylim([-1.5, 1.5])
+    # ax[1].grid(True)
+    #
+    # if plot_input:
+    #     ax[2].plot(time_val[idx_plot_start:idx_plot_end], u_in_val[idx_plot_start:idx_plot_end,0], 'k',  label='$u_{in}$')
+    #     ax[2].legend(loc='upper right')
+    #     ax[2].set_xlabel("Time (s)")
+    #     ax[2].set_ylabel("Voltage (V)")
+    #     ax[2].set_ylim([-5, 5])
+    #     ax[2].grid(True)
+    #
+    # fig_name = f"RLC_SS_{dataset}_{model_filename}.pdf"
+    # fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
+
+    if plot_input:
+        fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 6.5))
+    else:
+        fig, ax = plt.subplots(1, 1, sharex=True, figsize=(6, 2.5))
+        ax = [ax]
+
+    idx_plot_start = 0#1000
     idx_plot_end = time_val.size
 
-    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(q_meas_val[idx_plot_start:idx_plot_end,0]), 'k',  label='$v_C$')
-    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
+    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(q_meas_val[idx_plot_start:idx_plot_end,0]), 'k',  label='$p$')
+    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='$\hat{p}^{\mathrm{sim}}$')
     ax[0].legend(loc='upper right')
     ax[0].set_xlabel("Time (s)")
     ax[0].set_ylabel("Position (m)")
     ax[0].set_ylim([0, 0.3])
     ax[0].grid(True)
+    ax[0].set_xlim([0, 21])
 
-    ax[1].plot(time_val[idx_plot_start:idx_plot_end], v_est_val[idx_plot_start:idx_plot_end,0], 'k',  label='$v_C$')
-    ax[1].plot(time_val[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end, 1],'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
-    ax[1].legend(loc='upper right')
-    ax[1].set_xlabel("Time (s)")
-    ax[1].set_ylabel("Speed (m/s)")
-    ax[1].set_ylim([-1.5, 1.5])
-    ax[1].grid(True)
+    if plot_input:
+        ax[1].plot(time_val[idx_plot_start:idx_plot_end], u_in_val[idx_plot_start:idx_plot_end,0], 'k',  label='$\\tau$')
+        ax[1].legend(loc='upper right')
+        ax[1].set_xlabel("Time (s)")
+        ax[1].set_ylabel("Force (N)")
+        ax[1].set_ylim([-10, 10])
+        ax[1].grid(True)
 
-    ax[2].plot(time_val[idx_plot_start:idx_plot_end], u_in_val[idx_plot_start:idx_plot_end,0], 'k',  label='$u_{in}$')
-    ax[2].legend(loc='upper right')
-    ax[2].set_xlabel("Time (s)")
-    ax[2].set_ylabel("Voltage (V)")
-    ax[2].set_ylim([-5, 5])
-    ax[2].grid(True)
+    fig_name = f"EMPS_SS_{dataset}_{model_name}.pdf"
+    fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
 
     # In[compute metrics]
     R_sq_idx = metrics.r_squared(x_est_val, x_sim)
