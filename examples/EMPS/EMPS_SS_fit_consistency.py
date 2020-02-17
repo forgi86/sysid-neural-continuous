@@ -89,7 +89,7 @@ if __name__ == '__main__':
 
         # Compute consistency loss
 
-        DX = ts/2 * ( ss_model(x_hidden_fit[1:, :], u_torch_fit[1:, :]) + ss_model(x_hidden_fit[0:-1, :],  u_torch_fit[0:-1, :]) )
+        DX = ts/2 * ( ss_model(x_hidden_fit[1:, :], u_torch_fit[1:, :]) + ss_model(x_hidden_fit[0:-1, :],  u_torch_fit[0:-1, :]) ) # Backward Euler
         err_consistency = x_hidden_fit[1:, :] - x_hidden_fit[0:-1, :] - DX
         err_consistency_scaled = err_consistency
         loss_consistency = 1000*torch.mean(err_consistency_scaled**2)

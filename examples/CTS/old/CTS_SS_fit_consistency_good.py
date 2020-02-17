@@ -20,7 +20,7 @@ if __name__ == '__main__':
     torch.manual_seed(0)
 
     # Overall parameters
-    num_iter = 50000  # gradient-based optimization steps
+    num_iter = 100000  # gradient-based optimization steps
     t_fit = 2e-3  # fitting on t_fit ms of data
     alpha = 90000  # regularization weight
     lr = 1e-5  # learning rate
@@ -101,11 +101,11 @@ if __name__ == '__main__':
     if not os.path.exists("models"):
         os.makedirs("models")
 
-    train_time = time.time() - start_time  # 266.23 s
+    train_time = time.time() - start_time  # 5353.38 s
     print(f"\nTrain time: {train_time:.2f}")
 
-    model_filename = f"model_SS_custom_hidden_integration_tmp.pkl"
-    hidden_filename = f"hidden_SS_custom_hidden_integration_tmp.pkl"
+    model_filename = f"model_SS_custom_hidden_integration.pkl"
+    hidden_filename = f"hidden_SS_custom_hidden_integration.pkl"
 
     torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
     torch.save(x_hidden_fit_torch, os.path.join("models", hidden_filename))
@@ -119,7 +119,6 @@ if __name__ == '__main__':
     if not os.path.exists("fig"):
         os.makedirs("fig")
 
-    # In[Plot loss]
     fig, ax = plt.subplots(1, 1)
     ax.plot(LOSS, 'k', label='ALL')
     ax.plot(LOSS_CONSISTENCY, 'r', label='CONSISTENCY')

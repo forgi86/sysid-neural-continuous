@@ -23,11 +23,11 @@ if __name__ == '__main__':
     torch.manual_seed(0)
 
     # Overall parameters
-    num_iter = 10000  # gradient-based optimization steps
+    num_iter = 100000  # gradient-based optimization steps
     seq_len = 128  # subsequence length m
     batch_size = 64  # batch size
     alpha = 1.0  # regularization weight
-    lr = 1e-3  # learning rate
+    lr = 1e-4  # learning rate
     test_freq = 100  # print message every test_freq iterations
     val_freq = 100
 
@@ -62,7 +62,7 @@ if __name__ == '__main__':
         {'params': params_hidden, 'lr': lr},
     ], lr=lr*10)
 
-    #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, factor=0.1, min_lr=1e-6, verbose=True)
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, factor=0.1, min_lr=1e-6, verbose=True)
 
     # Batch extraction funtion
     def get_batch(batch_size, seq_len):
@@ -131,7 +131,7 @@ if __name__ == '__main__':
         loss_consistency = torch.mean(err_consistency_scaled**2)
 
         # Compute trade-off loss
-        if itr > 1000:
+        if itr > 20000:
             loss = loss_fit + alpha*loss_consistency
         else:
             loss = loss_fit
@@ -160,7 +160,7 @@ if __name__ == '__main__':
                 loss_sim = torch.sqrt(torch.mean(err_sim_torch_fit**2))
                 LOSS_SIM.append(loss_sim.item())
                 writer.add_scalar("loss/loss_train_sim", loss_sim, itr)
-                #scheduler.step(loss_sim)
+                scheduler.step(loss_sim)
                 print(f'Iter {itr} | Tradeoff Loss {loss:.4f}   Consistency Loss {alpha*loss_consistency:.4f}   Fit Loss {loss_fit:.4f}   Simulation Loss {loss_sim:.4f}')
 
 
@@ -179,8 +179,8 @@ if __name__ == '__main__':
     if not os.path.exists("models"):
         os.makedirs("models")
 
-    model_filename =  f"model_custom_SS_{seq_len}step_tmp.pkl"
-    hidden_filename = f"hidden_custom_SS_{seq_len}step_tmp.pkl"
+    model_filename =  f"model_custom_SS_{seq_len}step.pkl"
+    hidden_filename = f"hidden_custom_SS_{seq_len}step.pkl"
 
     torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
     torch.save(x_hidden_fit, os.path.join("models", hidden_filename))

@@ -7,20 +7,21 @@ import sys
 
 sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import CascadedTanksOverflowNeuralStateSpaceModel
-from torchid.ss_simulator_ct import ExplicitRKSimulator, ForwardEulerSimulator
+from torchid.ss_simulator_ct import ExplicitRKSimulator
 from common import metrics
 
 if __name__ == '__main__':
 
     plot_input = False
 
-    dataset_type = 'val'
+    #dataset_type = 'val'
+    dataset_type = 'id'
 
-    model_name = 'model_custom_SS_tmp_128step'
-    hidden_name = 'hidden_custom_SS_tmp_128step'
+    #model_name = 'model_custom_SS_128step_tmp'
+    #hidden_name = 'hidden_custom_SS_128step_tmp'
 
-    #model_name = 'model_SS_custom_hidden_integration'
-    #hidden_name = 'hidden_SS_custom_hidden_integration'
+    model_name = 'model_SS_custom_hidden_integration_tmp'
+    hidden_name = 'hidden_SS_custom_hidden_integration_tmp'
 
     # Load dataset
     df_data = pd.read_csv(os.path.join("data", "dataBenchmark.csv"))
@@ -47,7 +48,7 @@ if __name__ == '__main__':
 
     # Setup neural model structure
     ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=100)
-    nn_solution = ForwardEulerSimulator(ss_model, ts=ts) #ForwardEulerSimulator(ss_model, ts=ts)
+    nn_solution = ExplicitRKSimulator(ss_model, ts=ts) #ForwardEulerSimulator(ss_model, ts=ts)
     nn_solution.ss_model.load_state_dict(torch.load(os.path.join("models", model_name + ".pkl")))
     x_hidden_fit = torch.load(os.path.join("models", hidden_name + ".pkl"))
 
@@ -103,4 +104,4 @@ if __name__ == '__main__':
 
     print(f"R-squared metrics: {R_sq}")
     print(f"RMSE-squared metrics: {rmse_sim}")
-    print(f"fit index {fit_index}")
+    print(f"fit index {fit_index} %")
