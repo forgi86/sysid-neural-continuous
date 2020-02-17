@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     plot_input = False
 
-    #dataset_type = 'val'
+    #dataset_type = 'test'
     dataset_type = 'id'
 
     #model_name = 'model_custom_SS_128step_tmp'
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     if dataset_type == 'id':
         u = np.array(df_data[['uEst']]).astype(np.float32)
         y = np.array(df_data[['yEst']]).astype(np.float32)
-    else:
+    elif dataset_type == 'test':
         u = np.array(df_data[['uVal']]).astype(np.float32)
         y = np.array(df_data[['yVal']]).astype(np.float32)
 

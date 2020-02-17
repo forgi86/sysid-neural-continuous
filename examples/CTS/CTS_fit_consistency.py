@@ -104,8 +104,8 @@ if __name__ == '__main__':
     train_time = time.time() - start_time  # 266.23 s
     print(f"\nTrain time: {train_time:.2f}")
 
-    model_filename = f"model_SS_custom_hidden_integration_tmp.pkl"
-    hidden_filename = f"hidden_SS_custom_hidden_integration_tmp.pkl"
+    model_filename = f"model_SS_custom_hidden_integration.pkl"
+    hidden_filename = f"hidden_SS_custom_hidden_integration.pkl"
 
     torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
     torch.save(x_hidden_fit_torch, os.path.join("models", hidden_filename))

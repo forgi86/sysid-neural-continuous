@@ -97,4 +97,4 @@ if __name__ == '__main__':
     COL_Y = ['V_C']
     COL = COL_T + COL_X + COL_U + COL_Y
     df_X = pd.DataFrame(X, columns=COL)
-    df_X.to_csv(os.path.join("data", "RLC_data_val.csv"), index=False)
+    df_X.to_csv(os.path.join("data", "RLC_data_test.csv"), index=False)

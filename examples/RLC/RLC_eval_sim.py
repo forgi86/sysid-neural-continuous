@@ -14,8 +14,8 @@ if __name__ == '__main__':
 
     plot_input = False
 
+    dataset_type = 'test'
     #dataset_type = 'id'
-    dataset_type = 'id'
     #model_type = '1step_nonoise'
     #model_type = '1step_noise'
     model_type = '64step_noise'
