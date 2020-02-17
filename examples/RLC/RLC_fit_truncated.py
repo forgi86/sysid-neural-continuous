@@ -22,6 +22,7 @@ if __name__ == '__main__':
     # Overall parameters
     num_iter = 10000  # gradient-based optimization steps
     seq_len = 64  # subsequence length m
+    batch_size = 64 # batch size q
     t_fit = 2e-3  # fitting on t_fit ms of data
     alpha = 1.0  # regularization weight
     lr = 1e-3  # learning rate
@@ -54,9 +55,8 @@ if __name__ == '__main__':
     SNR_db = 10*np.log10(SNR)
 
     # Get fit data #
-    Ts = t[1] - t[0]
-    n_fit = int(t_fit // Ts)  # x.shape[0]
-    batch_size = n_fit // seq_len
+    ts = t[1] - t[0]
+    n_fit = int(t_fit // ts)  # x.shape[0]
     u_fit = u[0:n_fit]
     x_fit = x_noise[0:n_fit]
     x_fit_nonoise = x[0:n_fit] # not used, just for reference
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     torch.save(x_hidden_fit, os.path.join("models", hidden_filename))
 
     t_val = 5e-3
-    n_val = int(t_val // Ts)  # x.shape[0]
+    n_val = int(t_val // ts)  # x.shape[0]
 
     input_data_val = u[0:n_val]
     state_data_val = x[0:n_val]

@@ -1,6 +1,7 @@
 # Continuous-time system identification with neural networks 
 
-This repository contains the Python code to reproduce the results of the paper "Continuous-time system identification with neural networks" by Marco Forgione and Dario Piga.
+<!--- This repository contains the Python code to reproduce the results of the 
+paper "Continuous-time system identification with neural networks" by Marco Forgione and Dario Piga. --->
 
 The following fitting methods for continuous-time State-Space (SS) neural dynamical models are implemented
 
