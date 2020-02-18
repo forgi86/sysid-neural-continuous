@@ -112,7 +112,7 @@ if __name__ == '__main__':
         optimizer.step()
 
     train_time = time.time() - start_time
-    print(f"\nTrain time: {train_time:.2f}") # 182 seconds
+    print(f"\nTrain time: {train_time:.2f}") # 8043.92 seconds
 
     # Save model
     if not os.path.exists("models"):

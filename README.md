@@ -24,8 +24,8 @@ Three [examples](examples) are presented:
 
 For the [Cascaded Tanks System](examples/CTS_example) example, the main scripts are:
 
- *  ``CTS_fit_truncated.py``: truncated simulation error minimization
- *  ``CTS_fit_consistency.py``: SS model, evaluate the simulation performance of the identified models, produce relevant plots  and model statistics
+ *  ``CTS_fit_truncated.py``: identification with truncated simulation error minimization
+ *  ``CTS_fit_consistency.py``: identification with consistency scheme
  *  ``CTS_eval_sim.py``: Evaluate simulation performance of the identified models
  *  ``CTS_OE_comparison.m``: Linear Output Error identification in Matlab (``oe`` method)
  *  ``CTS_subspace_comparison.m``: Linear subspace identification in Matlab (``n4sid`` method)

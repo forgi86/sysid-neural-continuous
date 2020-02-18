@@ -249,7 +249,7 @@ class CascadedTanksOverflowNeuralStateSpaceModel(nn.Module):
         if init_small:
             for m in self.net_dx2.modules():
                 if isinstance(m, nn.Linear):
-                    nn.init.normal_(m.weight, mean=0, std=1e-4)
+    
                     nn.init.constant_(m.bias, val=0)
 
     def forward(self, in_x, in_u):
