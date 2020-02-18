@@ -22,7 +22,7 @@ if __name__ == '__main__':
     lr = 1e-4  # learning rate
     num_iter = 40000  # gradient-based optimization steps
     test_freq = 500  # print message every test_freq iterations
-    add_noise = False
+    add_noise = True
 
     # Column names in the dataset
     COL_T = ['time']

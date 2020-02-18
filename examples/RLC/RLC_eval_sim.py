@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import torch
+import matplotlib
 import matplotlib.pyplot as plt
 import os
 import sys
@@ -12,15 +13,18 @@ from common import metrics
 
 if __name__ == '__main__':
 
+    matplotlib.rc('text', usetex=True)
+
     plot_input = False
 
-    #dataset_type = 'test'
-    dataset_type = 'id'
+    dataset_type = 'test'
+    #dataset_type = 'id'
 
     model_type = '64step_noise'
     #model_type = 'fullsim_noise'
     #model_type = '1step_noise'
     #model_type = '1step_nonoise'
+    #model_type = 'soft_noise'
 
     # Column names in the dataset
     COL_T = ['time']

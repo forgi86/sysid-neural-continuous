@@ -12,7 +12,7 @@ sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import NeuralStateSpaceModel
 from torchid.ss_simulator_ct import ForwardEulerSimulator
 
-
+# Full simulation error minimization method
 if __name__ == '__main__':
 
     # Set seed for reproducibility

@@ -8,6 +8,10 @@ Created on Tue Dec 25 12:27:55 2018
 import numba as nb
 from sympy import symbols, collect, cancel, init_printing, fraction
 import numpy as np
+from matplotlib import rc
+rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('text', usetex=True)
+
 import matplotlib.pyplot as plt
 import os
 # In[Symbols of the RLC circuit]
