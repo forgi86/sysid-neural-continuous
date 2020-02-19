@@ -24,13 +24,13 @@ Three [examples](examples) are presented:
 
 For the [RLC](examples/RLC) example, the main scripts are:
 
- *  ``RLC_fit_truncated.py``: identification with truncated simulation error minimization
  *  ``RLC_fit_full``: identification with full simulation error minimization
- *  ``RLC_fit_1step``: identification with one-step prediction error minimization
+ *  ``RLC_fit_truncated.py``: identification with truncated simulation error minimization
  *  ``RLC_fit_soft.py``: identification with soft-constrained integration
- *  ``RLC_eval_sim.py``: Evaluate simulation performance of the identified models
- *  ``RLC_OE_comparison.m``: Linear Output Error identification in Matlab (``oe`` method)
- *  ``RLC_subspace_comparison.m``: Linear subspace identification in Matlab (``n4sid`` method)
+ *  ``RLC_fit_1step``: identification with one-step prediction error minimization
+ *  ``RLC_eval_sim.py``: evaluation of the identified models in simulation
+ *  ``RLC_OE_comparison.m``: linear Output Error identification in Matlab (``oe`` method)
+ *  ``RLC_subspace_comparison.m``: linear subspace identification in Matlab (``n4sid`` method)
   
 Similar scripts are provided for the other examples.
 
