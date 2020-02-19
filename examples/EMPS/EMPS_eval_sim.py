@@ -15,14 +15,20 @@ from common import metrics
 
 if __name__ == '__main__':
 
+    #matplotlib.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
+    matplotlib.rc('text', usetex=True)
+
     plot_input = True
 
     model_name = 'model_SS_64step_RK'
+#    model_name = 'model_SS_soft'
 
-    dataset = 'id'
+    #dataset = 'id'
+    dataset = 'test'
+
     if dataset == 'id':
         dataset_filename = 'DATA_EMPS_SC.csv' # used for identification
-    elif dataset == 'val':
+    elif dataset == 'test':
         dataset_filename = 'DATA_EMPS_PULSES_SC.csv' # used for test
 
     # Load dataset
@@ -106,11 +112,11 @@ if __name__ == '__main__':
         fig, ax = plt.subplots(1, 1, sharex=True, figsize=(6, 2.5))
         ax = [ax]
 
-    idx_plot_start = 0#1000
+    idx_plot_start = 0 #1000
     idx_plot_end = time_val.size
 
     ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(q_meas_val[idx_plot_start:idx_plot_end,0]), 'k',  label='$p$')
-    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='$\hat{p}^{\mathrm{sim}}$')
+    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='${p}^{\mathrm{sim}}$')
     ax[0].legend(loc='upper right')
     ax[0].set_xlabel("Time (s)")
     ax[0].set_ylabel("Position (m)")

@@ -13,6 +13,7 @@ from torchid.ssmodels_ct import MechanicalStateSpaceSystem
 from torchid.ss_simulator_ct import RK4Simulator, ExplicitRKSimulator, ForwardEulerSimulator
 from torch.utils.tensorboard import SummaryWriter  # requires tensorboard
 
+# Truncated simulation error minimization method
 if __name__ == '__main__':
 
     # In[Set seed for reproducibility]
@@ -129,7 +130,7 @@ if __name__ == '__main__':
         optimizer.step()
 
     train_time = time.time() - start_time
-    print(f"\nTrain time: {train_time:.2f}") # 731 seconds
+    print(f"\nTrain time: {train_time:.2f}") # 598 seconds
 
     if not os.path.exists("models"):
         os.makedirs("models")

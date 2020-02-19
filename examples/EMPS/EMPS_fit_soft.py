@@ -23,6 +23,7 @@ def unscale_pos(q_sc):
     return q_unsc
 
 
+# Soft-constrained integration method
 if __name__ == '__main__':
 
     # Set seed for reproducibility
@@ -78,7 +79,6 @@ if __name__ == '__main__':
     start_time = time.time()
     # Training loop
 
-    #scripted_nn_solution = torch.jit.script(nn_solution)
     for itr in range(0, num_iter):
 
         optimizer.zero_grad()
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         optimizer.step()
 
     train_time = time.time() - start_time
-    print(f"\nTrain time: {train_time:.2f}") # 182 seconds
+    print(f"\nTrain time: {train_time:.2f}") # 332 seconds
 
     if not os.path.exists("models"):
         os.makedirs("models")
@@ -120,7 +120,7 @@ if __name__ == '__main__':
     if not os.path.exists("models"):
         os.makedirs("models")
 
-    model_filename = f"model_SS_consistency.pkl"
+    model_filename = f"model_SS_soft.pkl"
 
     torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
 
