@@ -7,12 +7,12 @@ The following fitting methods for neural dynamical models are implemented and te
 
  1. Full simulation error minimization
  2. Truncated simulation error minimization
- 3. Numerical discretization consistency
+ 3. Soft-constrained integration
  4. One-step prediction error minimization
 
 
 # Folders:
-* [torchid](torchid):  pytorch implementation several neural dynamical models
+* [torchid](torchid):  PyTorch implementation several neural dynamical models
 * [examples](examples): examples of neural dynamical models identification 
 * [common](common): definition of metrics R-square, RMSE, fit index 
 
@@ -22,13 +22,15 @@ Three [examples](examples) are presented:
 * [CTS](examples/CTS): Cascaded Tanks System. Experimental dataset from http://www.nonlinearbenchmark.org
 * [EMPS](examples/EMPS): Electro-Mechanical Positioning System. Experimental dataset from http://www.nonlinearbenchmark.org
 
-For the [Cascaded Tanks System](examples/CTS_example) example, the main scripts are:
+For the [RLC](examples/RLC) example, the main scripts are:
 
- *  ``CTS_fit_truncated.py``: identification with truncated simulation error minimization
- *  ``CTS_fit_consistency.py``: identification with consistency scheme
- *  ``CTS_eval_sim.py``: Evaluate simulation performance of the identified models
- *  ``CTS_OE_comparison.m``: Linear Output Error identification in Matlab (``oe`` method)
- *  ``CTS_subspace_comparison.m``: Linear subspace identification in Matlab (``n4sid`` method)
+ *  ``RLC_fit_truncated.py``: identification with truncated simulation error minimization
+ *  ``RLC_fit_full``: identification with full simulation error minimization
+ *  ``RLC_fit_1step``: identification with one-step prediction error minimization
+ *  ``RLC_fit_soft.py``: identification with soft-constrained integration
+ *  ``RLC_eval_sim.py``: Evaluate simulation performance of the identified models
+ *  ``RLC_OE_comparison.m``: Linear Output Error identification in Matlab (``oe`` method)
+ *  ``RLC_subspace_comparison.m``: Linear subspace identification in Matlab (``n4sid`` method)
   
 Similar scripts are provided for the other examples.
 
@@ -43,11 +45,12 @@ Simulations were performed on a Python 3.7 conda environment with
  * pytorch (version 1.4)
  * numba
  * nodepy
+ * tensorboard
  
 These dependencies may be installed through the commands:
 
 ```
 conda install numpy numba scipy sympy pandas matplotlib ipython
 conda install pytorch torchvision cpuonly -c pytorch
-pip install nodepy
+pip install tensorboard nodepy
 ```

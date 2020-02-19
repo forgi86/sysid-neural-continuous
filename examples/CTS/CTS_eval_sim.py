@@ -2,26 +2,30 @@ import pandas as pd
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
+import matplotlib
 import os
 import sys
 
 sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import CascadedTanksOverflowNeuralStateSpaceModel
-from torchid.ss_simulator_ct import ExplicitRKSimulator
+from torchid.ss_simulator_ct import ForwardEulerSimulator, ExplicitRKSimulator, RK4Simulator
 from common import metrics
 
 if __name__ == '__main__':
 
+    matplotlib.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
+    matplotlib.rc('text', usetex=True)
+
     plot_input = False
 
-    #dataset_type = 'test'
-    dataset_type = 'id'
+    dataset_type = 'test'
+    #dataset_type = 'id'
 
-    #model_name = 'model_custom_SS_128step_tmp'
-    #hidden_name = 'hidden_custom_SS_128step_tmp'
+    model_name = 'model_SS_128step'
+    hidden_name = 'hidden_SS_128step'
 
-    model_name = 'model_SS_custom_hidden_integration_tmp'
-    hidden_name = 'hidden_SS_custom_hidden_integration_tmp'
+    #model_name = 'model_SS_soft'
+    #hidden_name = 'hidden_SS_soft'
 
     # Load dataset
     df_data = pd.read_csv(os.path.join("data", "dataBenchmark.csv"))
@@ -32,15 +36,15 @@ if __name__ == '__main__':
         u = np.array(df_data[['uVal']]).astype(np.float32)
         y = np.array(df_data[['yVal']]).astype(np.float32)
 
-    ts = df_data['Ts'][0].astype(np.float32)
-    time_exp = np.arange(y.size).astype(np.float32) * ts
+    ts_meas = df_data['Ts'][0].astype(np.float32)
+    time_exp = np.arange(y.size).astype(np.float32) * ts_meas
 
 
     # Build validation data
     t_val_start = 0
     t_val_end = time_exp[-1]
-    idx_val_start = int(t_val_start//ts)
-    idx_val_end = int(t_val_end//ts)
+    idx_val_start = int(t_val_start // ts_meas)
+    idx_val_end = int(t_val_end // ts_meas)
 
     y_meas_val = y[idx_val_start:idx_val_end]
     u_val = u[idx_val_start:idx_val_end]
@@ -48,7 +52,7 @@ if __name__ == '__main__':
 
     # Setup neural model structure
     ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=100)
-    nn_solution = ExplicitRKSimulator(ss_model, ts=ts) #ForwardEulerSimulator(ss_model, ts=ts)
+    nn_solution = ForwardEulerSimulator(ss_model, ts=ts_meas) #ForwardEulerSimulator(ss_model, ts=ts)
     nn_solution.ss_model.load_state_dict(torch.load(os.path.join("models", model_name + ".pkl")))
     x_hidden_fit = torch.load(os.path.join("models", hidden_name + ".pkl"))
 
@@ -74,7 +78,7 @@ if __name__ == '__main__':
     idx_plot_end = time_val.size
 
     ax[0].plot(time_val[idx_plot_start:idx_plot_end], y_meas_val[idx_plot_start:idx_plot_end, 0], 'k', label='$y$')
-    ax[0].plot(time_val[idx_plot_start:idx_plot_end], y_sim_val[idx_plot_start:idx_plot_end, 0], 'r--', label='$\hat{y}^{\mathrm{sim}}$')
+    ax[0].plot(time_val[idx_plot_start:idx_plot_end], y_sim_val[idx_plot_start:idx_plot_end, 0], 'r--', label='${y}^{\mathrm{sim}}$')
     ax[0].legend(loc='upper right')
     ax[0].set_xlabel("Time (s)")
     ax[0].set_ylabel("Voltage (V)")

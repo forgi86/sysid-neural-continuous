@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append(os.path.join("..", ".."))
 from torchid.ssmodels_ct import CascadedTanksOverflowNeuralStateSpaceModel
-from torchid.ss_simulator_ct import ExplicitRKSimulator
+from torchid.ss_simulator_ct import ForwardEulerSimulator
 
 
+# Soft-constrained integration method
 if __name__ == '__main__':
 
     # Set seed for reproducibility
@@ -21,9 +22,8 @@ if __name__ == '__main__':
 
     # Overall parameters
     num_iter = 50000  # gradient-based optimization steps
-    t_fit = 2e-3  # fitting on t_fit ms of data
-    alpha = 90000  # regularization weight
-    lr = 1e-5  # learning rate
+    alpha = 50000  # regularization weight
+    lr = 2e-5  # learning rate
     test_freq = 100  # print message every test_freq iterations
 
     # Load dataset
@@ -43,16 +43,16 @@ if __name__ == '__main__':
     u_fit_torch = torch.tensor(u_id, dtype=torch.float32)
 
     # Build neural state-space model
-    ts_integ = ts_meas  # fictitious sampling time, better for numerical reasons
-    ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=100)#, activation='tanh')
-    nn_solution = ExplicitRKSimulator(ss_model, ts=ts_integ)
+    ts_integ = ts_meas
+    ss_model = CascadedTanksOverflowNeuralStateSpaceModel(n_feat=100)  #, activation='tanh')
+    nn_solution = ForwardEulerSimulator(ss_model, ts=ts_integ)
 
     # Setup optimizer
     params_net = list(ss_model.parameters())
     params_hidden = [x_hidden_fit_torch]
     optimizer = optim.Adam([
         {'params': params_net,    'lr': lr},
-        {'params': params_hidden, 'lr': 100*lr},
+        {'params': params_hidden, 'lr': 1e-3},
     ], lr=lr)
 
     # Scaling factor for the loss
@@ -75,23 +75,24 @@ if __name__ == '__main__':
         loss_fit = torch.mean(err_fit_scaled**2)
 
         # Compute consistency loss
-        # DX for the Crank-Nicolson integration scheme
+        #DX = ts_integ*ss_model(x_hidden_fit_torch[1:, :], u_torch_fit[1:, :]) # backward euler
         DX = ts_integ/2 * (ss_model(x_hidden_fit_torch[1:, :], u_fit_torch[1:, :]) +
-                           ss_model(x_hidden_fit_torch[0:-1, :], u_fit_torch[0:-1, :]))
+                           ss_model(x_hidden_fit_torch[0:-1, :], u_fit_torch[0:-1, :]) ) # Crank-Nicolson
+        #DX = ts_integ * ss_model(x_hidden_fit_torch[0:-1, :], u_fit_torch[0:-1, :]) # forward euler
 
         err_consistency = x_hidden_fit_torch[1:, :] - x_hidden_fit_torch[0:-1, :] - DX
         err_consistency_scaled = err_consistency/scale_error
         loss_consistency = torch.mean(err_consistency_scaled**2)
 
         # Compute trade-off loss
-        loss = loss_fit + alpha*loss_consistency
+        loss = loss_fit + alpha*loss_consistency #+ loss_hidden_norm
 
         # Statistics
         LOSS.append(loss.item())
         LOSS_FIT.append(loss_fit.item())
-        LOSS_CONSISTENCY.append(loss_consistency.item())
+        LOSS_CONSISTENCY.append(alpha*loss_consistency.item())
         if itr % test_freq == 0:
-            print(f'Iter {itr} | Tradeoff Loss {loss:.6f}   Consistency Loss {(alpha*loss_consistency):.6f}   Fit Loss {loss_fit:.6f}')
+            print(f'Iter {itr} | Tradeoff Loss {loss:.6f}   Consistency Loss {alpha*loss_consistency:.6f}   Fit Loss {loss_fit:.6f}')
 
         # Optimize
         loss.backward()
@@ -104,8 +105,8 @@ if __name__ == '__main__':
     train_time = time.time() - start_time  # 266.23 s
     print(f"\nTrain time: {train_time:.2f}")
 
-    model_filename = f"model_SS_custom_hidden_integration.pkl"
-    hidden_filename = f"hidden_SS_custom_hidden_integration.pkl"
+    model_filename = f"model_SS_soft.pkl"
+    hidden_filename = f"hidden_SS_soft.pkl"
 
     torch.save(nn_solution.ss_model.state_dict(), os.path.join("models", model_filename))
     torch.save(x_hidden_fit_torch, os.path.join("models", hidden_filename))
@@ -129,7 +130,7 @@ if __name__ == '__main__':
     ax.set_ylabel("Loss (-)")
     ax.set_xlabel("Iteration (-)")
 
-    fig_name = f"CTS_SS_loss_hidden_integration_noise.pdf"
+    fig_name = f"CTS_SS_loss_soft_integration_noise.pdf"
     fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
 
     # In[Simulate]

@@ -24,11 +24,11 @@ if __name__ == '__main__':
     torch.manual_seed(0)
 
     # Overall parameters
-    num_iter = 10000  # gradient-based optimization steps
+    num_iter = 20000  # gradient-based optimization steps
     seq_len = 128  # subsequence length m
-    batch_size = 64  # batch size
+    batch_size = 32  # batch size
     alpha = 1.0  # regularization weight
-    lr = 1e-3  # learning rate
+    lr = 1e-4  # learning rate
     test_freq = 100  # print message every test_freq iterations
 
     # Load dataset
@@ -131,13 +131,14 @@ if __name__ == '__main__':
         loss_consistency = torch.mean(err_consistency_scaled**2)
 
         # Compute trade-off loss
-        if itr > 1000:
-            loss = loss_fit + alpha*loss_consistency
-        else:
-            loss = loss_fit
+        #if itr > 0:
+        #    loss = loss_fit + alpha*loss_consistency
+        #else:
+        #    loss = loss_fit
+        loss = loss_fit + alpha*loss_consistency
+
 
         # Statistics
-
         writer.add_scalars("opt_losses", {
                            "total_loss": loss,
                            "loss_fit": loss_fit,
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         optimizer.step()
 
     train_time = time.time() - start_time
-    print(f"\nTrain time: {train_time:.2f}") #  521 seconds
+    print(f"\nTrain time: {train_time:.2f}") # 182 seconds
 
     if not os.path.exists("models"):
         os.makedirs("models")
