@@ -215,7 +215,7 @@ class CascadedTanksNeuralStateSpaceModel(nn.Module):
 
 class CascadedTanksOverflowNeuralStateSpaceModel(nn.Module):
 
-    def __init__(self, n_feat=64, scale_dx=1.0, init_small=True, activation='relu'):
+    def __init__(self, n_feat=64, scale_dx=1.0, init_small=True):
         super(CascadedTanksOverflowNeuralStateSpaceModel, self).__init__()
         self.n_feat = n_feat
         self.scale_dx = scale_dx
@@ -235,61 +235,6 @@ class CascadedTanksOverflowNeuralStateSpaceModel(nn.Module):
             nn.ReLU(),
             #nn.Linear(n_feat, n_feat),
             #nn.ReLU(),
-            nn.Linear(n_feat, 1),
-        )
-
-        # Small initialization is better for multi-step methods
-        if init_small:
-            for m in self.net_dx1.modules():
-                if isinstance(m, nn.Linear):
-                    nn.init.normal_(m.weight, mean=0, std=1e-4)
-                    nn.init.constant_(m.bias, val=0)
-
-        # Small initialization is better for multi-step methods
-        if init_small:
-            for m in self.net_dx2.modules():
-                if isinstance(m, nn.Linear):
-    
-                    nn.init.constant_(m.bias, val=0)
-
-    def forward(self, in_x, in_u):
-
-        # the first state derivative is NN_1(x1, u)
-        in_1 = torch.cat((in_x[..., [0]], in_u), -1)  # concatenate 1st state component with input
-        dx_1 = self.net_dx1(in_1)
-
-        # the second state derivative is NN_2(x1, x2, u)
-        in_2 = torch.cat((in_x, in_u), -1) # concatenate states with input to define the
-        dx_2 = self.net_dx2(in_2)
-
-        # the state derivative is built by concatenation of dx_1 and dx_2, possibly scaled for numerical convenience
-        dx = torch.cat((dx_1, dx_2), -1)
-        dx = dx * self.scale_dx
-        return dx
-
-
-class CascadedTanksOverflowDeepNeuralStateSpaceModel(nn.Module):
-
-    def __init__(self, n_feat=64, scale_dx=1.0, init_small=True, activation='relu'):
-        super(CascadedTanksOverflowDeepNeuralStateSpaceModel, self).__init__()
-        self.n_feat = n_feat
-        self.scale_dx = scale_dx
-
-        # Neural network for the first state equation = NN(x_1, u)
-        self.net_dx1 = nn.Sequential(
-            nn.Linear(2, n_feat),
-            nn.ReLU(),
-            #nn.Linear(n_feat, n_feat),
-            #nn.Tanh(),
-            nn.Linear(n_feat, 1),
-        )
-
-        # Neural network for the first state equation = NN(x_1, x2, u) # we assume that with overflow the input may influence the 2nd tank instantaneously
-        self.net_dx2 = nn.Sequential(
-            nn.Linear(3, n_feat),
-            nn.ReLU(),
-            #nn.Linear(n_feat, n_feat),
-            #nn.Tanh(),
             nn.Linear(n_feat, 1),
         )
 
