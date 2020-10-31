@@ -38,7 +38,7 @@ if __name__ == '__main__':
     DATASET = "DATA_EMPS_PULSES"
 
     SCALE_POS = True # If True, scale the dataset
-    DECIMATE = 5 # Decimate data by a factor DECIMATE
+    DECIMATE = 5  # Decimate data by a factor DECIMATE
     DIFF_FILTER = False  # If True, use a derivative filter for velocity. Otherwise, np.diff
 
     # In[Load dataset]

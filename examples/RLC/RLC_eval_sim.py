@@ -99,8 +99,8 @@ if __name__ == '__main__':
     idx_plot_start = int(t_plot_start // ts)
     idx_plot_end = int(t_plot_end // ts)
 
-    ax[0].plot(time_val_us[idx_plot_start:idx_plot_end], x_true_val[idx_plot_start:idx_plot_end,0], 'k',  label='$v_C$')
-    ax[0].plot(time_val_us[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end,0],'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
+    ax[0].plot(time_val_us[idx_plot_start:idx_plot_end], x_true_val[idx_plot_start:idx_plot_end, 0], 'k',  label='$v_C$')
+    ax[0].plot(time_val_us[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end, 0], 'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
     ax[0].legend(loc='upper right')
     ax[0].grid(True)
     ax[0].set_xlabel("Time ($\mu$s)")
@@ -108,7 +108,7 @@ if __name__ == '__main__':
     ax[0].set_ylim([-300, 300])
 
     ax[1].plot(time_val_us[idx_plot_start:idx_plot_end], np.array(x_true_val[idx_plot_start:idx_plot_end:,1]), 'k', label='$i_L$')
-    ax[1].plot(time_val_us[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end:,1],'r--', label='$\hat i_L^{\mathrm{sim}}$')
+    ax[1].plot(time_val_us[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end:, 1], 'r--', label='$\hat i_L^{\mathrm{sim}}$')
     ax[1].legend(loc='upper right')
     ax[1].grid(True)
     ax[1].set_xlabel("Time ($\mu$s)")

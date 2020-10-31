@@ -36,13 +36,13 @@ if __name__ == '__main__':
     q_meas = np.array(df_data[["q_meas"]]).astype(np.float32)
     v_est = np.array(df_data[["v_est"]]).astype(np.float32)
     u_in = np.array(df_data[["u_in"]]).astype(np.float32)
-    ts = np.mean(np.diff(time_exp.ravel())) #time_exp[1] - time_exp[0]
+    ts = np.mean(np.diff(time_exp.ravel()))  #time_exp[1] - time_exp[0]
 
     # In[Init hidden state]
     x_est = np.zeros((q_ref.shape[0], 2), dtype=np.float32)
     x_est[:, 0] = np.copy(q_meas[:, 0])
     x_est[:, 1] = np.copy(v_est[:, 0])
-    x_hidden_fit = torch.tensor(x_est, dtype=torch.float32, requires_grad=True)  # hidden state is an optimization variable
+    x_hidden_fit = torch.tensor(x_est, dtype=torch.float32, requires_grad=True) # hidden state is an optimization variable
 
     # In[Fit variables]
     y_fit = q_meas
