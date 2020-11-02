@@ -21,10 +21,10 @@ if __name__ == '__main__':
     torch.manual_seed(0)
 
     # Overall parameters
-    num_iter = 50000  # gradient-based optimization steps
+    num_iter = 20000  # gradient-based optimization steps
     t_fit = 2e-3  # fitting on t_fit ms of data
-    alpha = 1e1  # fit/consistency trade-off constant
-    lr = 5e-4  # learning rate
+    alpha = 10e1  # fit/consistency trade-off constant
+    lr = 1e-3  # learning rate
     test_freq = 100  # print message every test_freq iterations
     add_noise = True
 
@@ -201,5 +201,3 @@ if __name__ == '__main__':
     ax[1].plot(x_hidden_fit_np[:, 1], 'r', label='Hidden')
     ax[1].legend()
     ax[1].grid(True)
-
-

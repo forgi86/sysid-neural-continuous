@@ -42,7 +42,7 @@ Simulations were performed on a Python 3.7 conda environment with
  * matplotlib
  * pandas
  * sympy
- * pytorch (version 1.4)
+ * pytorch (version 1.4.0)
  * numba
  * nodepy
  * tensorboard
