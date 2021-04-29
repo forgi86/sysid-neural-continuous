@@ -69,54 +69,19 @@ if __name__ == '__main__':
         loss = torch.mean(torch.abs(x_sim_torch - torch.tensor(x_est_val)))
     x_sim = np.array(x_sim_torch)
 
-    # In[Plot results]
-
-    # if plot_input:
-    #     fig, ax = plt.subplots(3, 1, sharex=True, figsize=(6, 6.5))
-    # else:
-    #     fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 4.5))
-    #
-    # idx_plot_start = 0
-    # idx_plot_end = time_val.size
-    #
-    # ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(q_meas_val[idx_plot_start:idx_plot_end,0]), 'k',  label='$v_C$')
-    # ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
-    # ax[0].legend(loc='upper right')
-    # ax[0].set_xlabel("Time (s)")
-    # ax[0].set_ylabel("Position (m)")
-    # ax[0].set_ylim([0, 0.3])
-    # ax[0].grid(True)
-    #
-    # ax[1].plot(time_val[idx_plot_start:idx_plot_end], v_est_val[idx_plot_start:idx_plot_end,0], 'k',  label='$v_C$')
-    # ax[1].plot(time_val[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end, 1],'r--', label='$\hat{v}^{\mathrm{sim}}_C$')
-    # ax[1].legend(loc='upper right')
-    # ax[1].set_xlabel("Time (s)")
-    # ax[1].set_ylabel("Speed (m/s)")
-    # ax[1].set_ylim([-1.5, 1.5])
-    # ax[1].grid(True)
-    #
-    # if plot_input:
-    #     ax[2].plot(time_val[idx_plot_start:idx_plot_end], u_in_val[idx_plot_start:idx_plot_end,0], 'k',  label='$u_{in}$')
-    #     ax[2].legend(loc='upper right')
-    #     ax[2].set_xlabel("Time (s)")
-    #     ax[2].set_ylabel("Voltage (V)")
-    #     ax[2].set_ylim([-5, 5])
-    #     ax[2].grid(True)
-    #
-    # fig_name = f"RLC_SS_{dataset}_{model_filename}.pdf"
-    # fig.savefig(os.path.join("fig", fig_name), bbox_inches='tight')
-
     if plot_input:
         fig, ax = plt.subplots(2, 1, sharex=True, figsize=(6, 6.5))
     else:
         fig, ax = plt.subplots(1, 1, sharex=True, figsize=(6, 2.5))
         ax = [ax]
 
-    idx_plot_start = 0 #1000
+    idx_plot_start = 0
     idx_plot_end = time_val.size
 
-    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(q_meas_val[idx_plot_start:idx_plot_end,0]), 'k',  label='$p$')
-    ax[0].plot(time_val[idx_plot_start:idx_plot_end], unscale_pos(x_sim[idx_plot_start:idx_plot_end, 0]),'r--', label='${p}^{\mathrm{sim}}$')
+    x_est_val[:, 0] = unscale_pos(x_est_val[:, 0])
+    x_sim[:, 0] = unscale_pos(x_sim[:, 0])
+    ax[0].plot(time_val[idx_plot_start:idx_plot_end], x_est_val[idx_plot_start:idx_plot_end, 0], 'k',  label='$p$')
+    ax[0].plot(time_val[idx_plot_start:idx_plot_end], x_sim[idx_plot_start:idx_plot_end, 0], 'r--', label='${p}^{\mathrm{sim}}$')
     ax[0].legend(loc='upper right')
     ax[0].set_xlabel("Time (s)")
     ax[0].set_ylabel("Position (m)")
@@ -141,6 +106,6 @@ if __name__ == '__main__':
     fit_idx = metrics.fit_index(x_est_val, x_sim)
 
     print(f"R-squared metrics: {R_sq_idx}")
-    print(f"RMSE-squared metrics: {rmse_idx}")
+    print(f"RMSE metrics: {rmse_idx}")
     print(f"fit index {fit_idx}")
 
