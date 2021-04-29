@@ -1,7 +1,6 @@
 # Continuous-time system identification with neural networks 
 
-<!--- This repository contains the Python code to reproduce the results of the 
-paper "Continuous-time system identification with neural networks" by Marco Forgione and Dario Piga. --->
+This repository contains the Python code to reproduce the results of the paper [Continuous-time system identification with neural networks](https://arxiv.org/pdf/2006.02915) by Marco Forgione and Dario Piga.
 
 The following fitting methods for neural dynamical models are implemented and tested
 
@@ -53,4 +52,23 @@ These dependencies may be installed through the commands:
 conda install numpy numba scipy sympy pandas matplotlib ipython
 conda install pytorch torchvision cpuonly -c pytorch
 pip install tensorboard nodepy
+```
+
+# Citing
+
+If you find this project useful, we encourage you to
+
+* Star this repository :star: 
+* Cite the [paper](https://www.sciencedirect.com/science/article/pii/S0947358021000169) 
+```
+@article{forgione2021a,
+  title={Continuous-time system identification
+  with neural networks: Model structures and fitting criteria},
+  author={Forgione, M. and Piga, D.},
+  journal={European Journal of Control},
+  volume={59},
+  pages={69--81},
+  year={2021},
+  publisher={Elsevier}
+}
 ```
