@@ -58,7 +58,7 @@ def error_rmse(y_true, y_pred, time_axis=0):
 def fit_index(y_true, y_pred, time_axis=0):
     """ Computes the per-channel fit index.
 
-    The fit index is commonly used in System Identification. See the definitionin the System Identification Toolbox
+    The fit index is commonly used in System Identification. See the definition in the System Identification Toolbox
     or in the paper 'Nonlinear System Identification: A User-Oriented Road Map',
     https://arxiv.org/abs/1902.00683, page 31.
     The fit index is computed separately on each channel.
@@ -74,17 +74,17 @@ def fit_index(y_true, y_pred, time_axis=0):
 
     Returns
     -------
-    fit_val : np.array
-        Array of r_squared value.
+    fit : np.array
+        Array of fit index.
 
     """
 
     err_norm = np.linalg.norm(y_true - y_pred, axis=time_axis, ord=2)  # || y - y_pred ||
-    y_mean = np.mean(y_true, axis=time_axis)
-    err_mean_norm = np.linalg.norm(y_true - y_mean, ord=2)  # || y - y_mean ||
-    fit_val = 100*(1 - err_norm/err_mean_norm)
+    y_mean = np.mean(y_true, axis=time_axis, keepdims=True)
+    err_mean_norm = np.linalg.norm(y_true - y_mean, axis=time_axis, ord=2)  # || y - y_mean ||
+    fit = 100*(1 - err_norm/err_mean_norm)
 
-    return fit_val
+    return fit
 
 
 if __name__ == '__main__':
